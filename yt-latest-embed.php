@@ -1,9 +1,11 @@
 <?php
 /*
-Plugin Name: YouTube Latest Video Embed
+Plugin Name: Latest YouTube Video Embedder
 Description: Embeds the latest YouTube video from a specified channel using a shortcode.
-Version: 1.1
+Version: 1.2
 Author: Jeremy Ciaramella
+License: GPLv3 or later
+Short Description: Embed the latest YouTube video from a specified channel using a WordPress shortcode.
 */
 
 // Register activation hook
@@ -12,7 +14,6 @@ register_activation_hook(__FILE__, 'yt_latest_embed_activate');
 // Activation function
 function yt_latest_embed_activate() {
     // Set default options on plugin activation
-    add_option('yt_latest_embed_api_key', '');
     add_option('yt_latest_embed_channel_id', '');
     add_option('yt_latest_embed_height', '315');
     add_option('yt_latest_embed_width', '560');
@@ -23,7 +24,6 @@ register_deactivation_hook(__FILE__, 'yt_latest_embed_deactivate');
 
 // Deactivation function (optional: clean up options)
 function yt_latest_embed_deactivate() {
-    delete_option('yt_latest_embed_api_key');
     delete_option('yt_latest_embed_channel_id');
     delete_option('yt_latest_embed_height');
     delete_option('yt_latest_embed_width');
@@ -46,7 +46,7 @@ function yt_latest_embed_add_admin_menu() {
 function yt_latest_embed_settings_page() {
     ?>
     <div class="wrap">
-        <h1>YouTube Latest Video Embed Settings</h1>
+        <h1>Latest YouTube Video Embedder</h1>
         <form method="post" action="options.php">
             <?php
             settings_fields('yt_latest_embed_options');
@@ -62,11 +62,10 @@ function yt_latest_embed_settings_page() {
 add_action('admin_init', 'yt_latest_embed_admin_init');
 
 function yt_latest_embed_admin_init() {
-    // Register settings
-    register_setting('yt_latest_embed_options', 'yt_latest_embed_api_key');
-    register_setting('yt_latest_embed_options', 'yt_latest_embed_channel_id');
-    register_setting('yt_latest_embed_options', 'yt_latest_embed_height');
-    register_setting('yt_latest_embed_options', 'yt_latest_embed_width');
+    // Register settings with sanitization callbacks
+    register_setting('yt_latest_embed_options', 'yt_latest_embed_channel_id', 'yt_latest_embed_sanitize_channel_id');
+    register_setting('yt_latest_embed_options', 'yt_latest_embed_height', 'yt_latest_embed_sanitize_height');
+    register_setting('yt_latest_embed_options', 'yt_latest_embed_width', 'yt_latest_embed_sanitize_width');
 
     // Add sections and fields
     add_settings_section(
@@ -74,14 +73,6 @@ function yt_latest_embed_admin_init() {
         'Settings',                      // Section title
         'yt_latest_embed_section_info',  // Callback for section description
         'yt_latest_embed_settings'       // Page to add section to
-    );
-
-    add_settings_field(
-        'yt_latest_embed_api_key',      // Field ID
-        'API Key',                      // Field label
-        'yt_latest_embed_api_key_input', // Callback for field input
-        'yt_latest_embed_settings',     // Page to add field to
-        'yt_latest_embed_main_section'  // Section to add field to
     );
 
     add_settings_field(
@@ -111,15 +102,10 @@ function yt_latest_embed_admin_init() {
 
 // Section callback (optional description)
 function yt_latest_embed_section_info() {
-    echo '<p>Enter your YouTube Data API key, channel ID, and preferred dimensions for embedding the latest video.</p>';
+    echo '<p>Enter your YouTube channel ID and preferred dimensions for embedding the latest video.</p>';
 }
 
 // Input field callbacks
-function yt_latest_embed_api_key_input() {
-    $api_key = get_option('yt_latest_embed_api_key');
-    echo '<input type="text" name="yt_latest_embed_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
-}
-
 function yt_latest_embed_channel_id_input() {
     $channel_id = get_option('yt_latest_embed_channel_id');
     echo '<input type="text" name="yt_latest_embed_channel_id" value="' . esc_attr($channel_id) . '" class="regular-text">';
@@ -135,52 +121,93 @@ function yt_latest_embed_width_input() {
     echo '<input type="number" name="yt_latest_embed_width" value="' . esc_attr($width) . '" class="small-text">';
 }
 
+// Sanitization callbacks
+function yt_latest_embed_sanitize_channel_id($input) {
+    return sanitize_text_field($input);
+}
+
+function yt_latest_embed_sanitize_height($input) {
+    return absint($input);
+}
+
+function yt_latest_embed_sanitize_width($input) {
+    return absint($input);
+}
+
 // Shortcode function
 function yt_latest_embed_shortcode($atts) {
     // Extract shortcode attributes
     $atts = shortcode_atts(array(
-        'api' => get_option('yt_latest_embed_api_key'),
         'channel' => get_option('yt_latest_embed_channel_id'),
         'height' => get_option('yt_latest_embed_height'),
         'width' => get_option('yt_latest_embed_width')
     ), $atts);
 
     // Retrieve shortcode attributes
-    $api_key = $atts['api'];
     $channel_id = $atts['channel'];
     $height = $atts['height'];
     $width = $atts['width'];
 
     // Ensure required parameters are provided
-    if (empty($api_key) || empty($channel_id)) {
-        return 'Error: API key and channel ID are required.';
+    if (empty($channel_id)) {
+        return 'Error: Channel ID is required.';
     }
 
-    // Construct YouTube API URL
-    $api_url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' . $channel_id . '&order=date&maxResults=1&key=' . $api_key;
+    // Construct YouTube RSS feed URL
+    $rss_url = "https://www.youtube.com/feeds/videos.xml?channel_id={$channel_id}";
 
-    // Make API request
-    $response = wp_remote_get($api_url);
+    // Fetch RSS feed
+    $response = wp_remote_get($rss_url);
 
-    // Check for API request errors
+    // Check for errors in fetching the feed
     if (is_wp_error($response)) {
-        return 'Error fetching video data.';
+        return 'Error fetching video data: ' . $response->get_error_message();
     }
 
-    // Parse JSON response
+    // Get the HTTP response code
+    $response_code = wp_remote_retrieve_response_code($response);
+
+    // Check if response code is not 200 OK
+    if ($response_code !== 200) {
+        return 'Error fetching video data: HTTP ' . $response_code;
+    }
+
+    // Parse XML response
     $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body);
+    libxml_use_internal_errors(true); // Enable internal error handling
+    $xml = simplexml_load_string($body);
 
-    // Check if video data exists
-    if (isset($data->items[0]->id->videoId)) {
-        $video_id = $data->items[0]->id->videoId;
-        $video_url = 'https://www.youtube.com/embed/' . $video_id;
+    // Check if XML parsing was successful
+    if ($xml === false) {
+        $errors = libxml_get_errors(); // Get XML parsing errors
+        $error_messages = array();
+        foreach ($errors as $error) {
+            $error_messages[] = $error->message;
+        }
+        return 'Error parsing video data: ' . implode(', ', $error_messages);
+    }
 
-        // Output embedded video
-        return '<iframe width="' . $width . '" height="' . $height . '" src="' . $video_url . '" frameborder="0" allowfullscreen></iframe>';
-    } else {
+    // Register YouTube namespace
+    $xml->registerXPathNamespace('yt', 'http://www.youtube.com/xml/schemas/2015');
+
+    // Find latest video entry
+    $entries = $xml->entry;
+    if (empty($entries)) {
         return 'No videos found.';
     }
+
+    // Get the first entry (latest video)
+    $latest_video = $entries[0];
+
+    // Extract video details
+    $video_title = htmlspecialchars($latest_video->title);
+    $video_id = (string) $latest_video->children('yt', true)->videoId;
+
+    // Generate embed code
+    $embed_code = "<iframe width=\"{$width}\" height=\"{$height}\" src=\"https://www.youtube.com/embed/{$video_id}\" frameborder=\"0\" allowfullscreen></iframe>";
+
+    // Output embedded video
+    return $embed_code;
 }
 
 // Register shortcode

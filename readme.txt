@@ -1,83 +1,72 @@
-=== Latest YouTube Video Embedder ===
-Contributors: merlynx
+=== Latest YouTube Video Embedder (RSS Version) ===
+Contributors: merlynx, chatgpt-echo (code collaboration via ChatGPT)
 Plugin Name: Latest YouTube Video Embedder
-Tags: youtube, youtube gallery, youtube channel
+Tags: youtube, youtube embed, latest video, playlist, rss, shortcode
 Requires at least: 4.5
 Tested up to: 6.8
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPLv3 or later
-Embed the latest YouTube video from a specified channel using a WordPress shortcode.
+
+Embed the latest YouTube video from a channel or playlist using a WordPress shortcode — no API key required.
 
 == Description ==
-Latest YouTube Video Embedder is a WordPress plugin that allows you to embed the latest video from your selected channel. 
-You will need the YouTube channel ID and a YouTube API Key set up from your Google Developer Console.
-The API Key, Channel ID, default height and default width are configurable in the Dashboard > Settings > Latest YouTube Video Embedder interface.
-You can also enter custom attribute values in the shortcode itself. (See "Shortcode" below)
+**Latest YouTube Video Embedder (RSS Version)** allows you to embed the latest video from a YouTube **channel** or **playlist** using public RSS feeds — no YouTube API key required.  
+Configure your default channel ID and/or playlist ID via Dashboard > Settings > Latest YouTube Video.  
+Use the shortcode `[latest_youtube_video]` anywhere in posts, pages, or widgets to dynamically show the most recent upload.
+
+You can also override the defaults inline via shortcode attributes. See "Usage" and "Shortcode" examples below.
 
 == Installation ==
-1. Download the plugin ZIP file from [GitHub Releases](link-to-your-releases).
-2. In your WordPress admin panel, navigate to `Plugins` -> `Add New`.
-3. Click on `Upload Plugin` and select the downloaded ZIP file.
-4. Activate the plugin once uploaded.
+1. Download the plugin ZIP file from [GitHub Releases](https://github.com/your-repo-link).
+2. In your WordPress admin panel, navigate to `Plugins` → `Add New`.
+3. Click `Upload Plugin` and select the downloaded ZIP file.
+4. Activate the plugin after installation.
 
 == Usage ==
-Fill out the settings with your defaults for Channel ID, API Key, and your preferred height and width values.  
-Once you have done this, the [ytlatestembed] shortcode will embed the latest video from that channel.  
+1. Go to **Settings** → **Latest YouTube Video** in your WordPress dashboard.
+2. Enter your default **channel ID** and/or **playlist ID**.
+3. Use the shortcode `[latest_youtube_video]` to embed the most recent video from the default channel.
+4. Use shortcode attributes to pull from a playlist or override the ID.
 
 == Shortcode ==
-* You can customize any four of these settings as attributes in the shortcode.
-* [ytlatestembed api=YOUR_API_KEY channel=YOUR_CHANNEL_ID height=315 width=560]
-* Replace `YOUR_API_KEY` with your YouTube Data API key and `YOUR_CHANNEL_ID` with the ID of the YouTube channel.
+Basic shortcode: 
+[latest_youtube_video]
+[latest_youtube_video source="channel"]
+[latest_youtube_video source="playlist"]
+[latest_youtube_video channel="UCabc123XYZ"]
+[latest_youtube_video playlist="PLxyz456ABC"]
+
 
 == Parameters ==
-- `api`: Your YouTube Data API key.
-- `channel`: YouTube channel ID.
-- `height` (optional): Height of the embedded video player (default: 315).
-- `width` (optional): Width of the embedded video player (default: 560).
+- `source`: Either `channel` or `playlist`. Uses the corresponding default from settings if provided.
+- `channel`: Overrides the default channel ID inline.
+- `playlist`: Overrides the default playlist ID inline.
 
-== Frequently Asked Question(s) ==
-- How do I set up a YouTube API Key?
+**Examples:**
+- `[latest_youtube_video]` – uses default channel from settings.
+- `[latest_youtube_video source="playlist"]` – uses default playlist from settings.
+- `[latest_youtube_video channel="UCxyz987654"]` – overrides and uses this specific channel.
+- `[latest_youtube_video playlist="PLabc654321"]` – overrides and uses this specific playlist.
 
-Setting up a YouTube API key on Google Developer Console is essential for accessing YouTube's API services. 
+== FAQ ==
 
-Here's a step-by-step guide to help you set it up:
+= Do I need a YouTube API key? =
+**No.** This plugin uses YouTube’s public RSS feeds to retrieve video data, so there is no need to create or manage API keys or billing quotas.
 
-1. **Navigate to Google Developer Console:**
-   * Go to the [Google Developer Console](https://console.developers.google.com/).
-
-2. **Create a New Project:**
-   * If you haven't created a project yet, click on the dropdown menu at the top of the page next to "Google Cloud Platform" and select "New Project." Give your project a name and click "Create."
-
-3. **Enable YouTube Data API:**
-   * In the sidebar menu, click on "APIs & Services" and then "Library."
-   * Search for "YouTube Data API" and click on it.
-   * Click the "Enable" button to enable the API for your project.
-
-4. **Create Credentials:**
-   * After enabling the API, click on "Credentials" in the sidebar menu under "APIs & Services."
-   * Click on "Create Credentials" and select "API key."
-
-5. **Restrict Your API Key (Optional but Recommended):**
-   * You can restrict your API key to prevent unauthorized use (recommended for security). Click on "Restrict Key" after creating it.
-   * Under "Application restrictions," select "HTTP referrers (websites)" or "IP addresses," and add your website URL or IP address where your application will make requests from. You can also add restrictions based on APIs.
-   * Click "Save" to apply the restrictions.
-
-6. **Copy Your API Key:**
-   * Once your API key is created, copy it. You'll use this API key to authenticate your requests to the YouTube Data API.
-
-7. **Use Your API Key:**
-   * Enter your API Key in Dashboard > Settings > YouTube Latest Video
-
-8. **Manage Your API Key:**
-   * You can manage your API keys (edit, delete, or regenerate) from the "Credentials" page in the Google Developer Console.
-
-9. **Billing (if required):**
-   * Depending on your usage, enabling APIs might require billing setup. Google offers free usage quotas for many APIs, but it's essential to check the [Google Cloud Pricing](https://cloud.google.com/pricing/) for details.
+= How do I get a channel or playlist ID? =
+- For **channel ID**: Go to the YouTube channel → right-click → "View page source" → search for `"channel_id"` or use the full channel URL (`youtube.com/channel/UCxxxx`).
+- For **playlist ID**: Copy the part of the playlist URL after `?list=`. Example: `https://www.youtube.com/playlist?list=PLxyz123` → Playlist ID is `PLxyz123`.
 
 == Changelog ==
 
-= Latest YouTube Video Embedder =
-* Initial stable release 6/2/2025
+= 1.2 (07/31/2025) =
+* Fully updated to use public RSS feeds (no API key required)
+* Added support for playlist and channel mode
+* Admin settings panel for default IDs
+* Smart shortcode system with override flexibility
 
 == License ==
 GPLv3 or later
+
+== Credits ==
+Code collaboration with **ChatGPT (Echo)** from OpenAI.

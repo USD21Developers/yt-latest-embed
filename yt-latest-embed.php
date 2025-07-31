@@ -1,9 +1,11 @@
 <?php
 /*
 Plugin Name: Latest YouTube Video Embedder (RSS Version)
-Description: Displays the latest YouTube video from a channel or playlist without needing an API key.
+Description: Displays the latest YouTube video from a channel or playlist using public RSS feeds—no API key required.
 Version: 1.2
 Author: Jeremy + Echo
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 */
 
 add_shortcode('latest_youtube_video', 'lyv_display_latest_video');
@@ -22,13 +24,12 @@ function lyv_display_latest_video($atts) {
     $channel_id = trim($atts['channel']);
     $playlist_id = trim($atts['playlist']);
 
-    // Determine actual source and ID
     if (!empty($channel_id)) {
         $source = 'channel';
     } elseif (!empty($playlist_id)) {
         $source = 'playlist';
     } elseif (empty($source)) {
-        $source = 'channel'; // fallback default
+        $source = 'channel';
     }
 
     if ($source === 'channel' && empty($channel_id)) {
@@ -37,7 +38,6 @@ function lyv_display_latest_video($atts) {
         $playlist_id = $options['playlist_id'] ?? '';
     }
 
-    // Construct feed URL
     if ($source === 'channel' && !empty($channel_id)) {
         $rss_url = "https://www.youtube.com/feeds/videos.xml?channel_id={$channel_id}";
     } elseif ($source === 'playlist' && !empty($playlist_id)) {
@@ -46,7 +46,6 @@ function lyv_display_latest_video($atts) {
         return 'No valid channel or playlist ID provided.';
     }
 
-    // Cache with transient
     $transient_key = 'lyv_rss_' . md5($rss_url);
     $video_id = get_transient($transient_key);
 
@@ -88,15 +87,20 @@ function lyv_settings_page() {
         <code>[latest_youtube_video]</code><br>
         <code>[latest_youtube_video source="channel"]</code><br>
         <code>[latest_youtube_video source="playlist"]</code><br>
-        <code>[latest_youtube_video channel="UCabc123"]</code><br>
-        <code>[latest_youtube_video playlist="PLxyz456"]</code><br>
+        <code>[latest_youtube_video channel="UCabc123XYZ"]</code><br>
+        <code>[latest_youtube_video playlist="PLxyz456ABC"]</code><br>
     </div>
     <?php
 }
 
 add_action('admin_init', 'lyv_admin_init');
 function lyv_admin_init() {
-    register_setting('lyv_plugin_settings_group', 'lyv_plugin_settings');
+    register_setting('lyv_plugin_settings_group', 'lyv_plugin_settings', function($input) {
+    $output = [];
+    $output['channel_id'] = sanitize_text_field($input['channel_id'] ?? '');
+    $output['playlist_id'] = sanitize_text_field($input['playlist_id'] ?? '');
+    return $output;
+});
 
     add_settings_section('lyv_main_section', 'Default YouTube IDs (for fallback)', null, 'lyv-settings');
 

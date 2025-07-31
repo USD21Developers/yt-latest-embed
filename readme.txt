@@ -1,5 +1,5 @@
 === Latest YouTube Video Embedder (RSS Version) ===
-Contributors: merlynx, chatgpt-echo (code collaboration via ChatGPT)
+Contributors: merlynx
 Plugin Name: Latest YouTube Video Embedder
 Tags: youtube, youtube embed, latest video, playlist, rss, shortcode
 Requires at least: 4.5
@@ -29,24 +29,19 @@ You can also override the defaults inline via shortcode attributes. See "Usage" 
 4. Use shortcode attributes to pull from a playlist or override the ID.
 
 == Shortcode ==
-Basic shortcode: 
+Basic shortcode:
 [latest_youtube_video]
+
+Optional variations:
 [latest_youtube_video source="channel"]
 [latest_youtube_video source="playlist"]
 [latest_youtube_video channel="UCabc123XYZ"]
 [latest_youtube_video playlist="PLxyz456ABC"]
 
-
 == Parameters ==
 - `source`: Either `channel` or `playlist`. Uses the corresponding default from settings if provided.
 - `channel`: Overrides the default channel ID inline.
 - `playlist`: Overrides the default playlist ID inline.
-
-**Examples:**
-- `[latest_youtube_video]` – uses default channel from settings.
-- `[latest_youtube_video source="playlist"]` – uses default playlist from settings.
-- `[latest_youtube_video channel="UCxyz987654"]` – overrides and uses this specific channel.
-- `[latest_youtube_video playlist="PLabc654321"]` – overrides and uses this specific playlist.
 
 == FAQ ==
 
@@ -58,7 +53,6 @@ Basic shortcode:
 - For **playlist ID**: Copy the part of the playlist URL after `?list=`. Example: `https://www.youtube.com/playlist?list=PLxyz123` → Playlist ID is `PLxyz123`.
 
 == Changelog ==
-
 = 1.2 (07/31/2025) =
 * Fully updated to use public RSS feeds (no API key required)
 * Added support for playlist and channel mode
